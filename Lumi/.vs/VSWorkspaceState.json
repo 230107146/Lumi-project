@@ -1,0 +1,14 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\lumi_backend",
+    "\\lumi_backend\\prisma",
+    "\\lumi_backend\\prisma\\migrations",
+    "\\lumi_backend\\src",
+    "\\lumi_backend\\src\\modules",
+    "\\lumi_backend\\src\\modules\\therapy",
+    "\\lumi_backend\\src\\modules\\therapy\\dto"
+  ],
+  "SelectedNode": "\\lumi_backend\\.gitignore",
+  "PreviewInSolutionExplorer": false
+}
