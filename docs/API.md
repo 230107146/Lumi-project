@@ -22,7 +22,12 @@ Purpose: Create a new user account
 
 Request Body:
 ```json
-{
-  "email": "user@example.com",
-  "password": "password123"
+{const firebaseConfig = {
+  apiKey: "AIzaSyAL42cbAAMvVLSIwNrUTsFxmxW7PWTn3kc",
+  authDomain: "lumi-d0e60.firebaseapp.com",
+  projectId: "lumi-d0e60",
+  storageBucket: "lumi-d0e60.firebasestorage.app",
+  messagingSenderId: "166885500146",
+  appId: "1:166885500146:web:c6f73603fc8fdbb8489c6b"
+};
 }
