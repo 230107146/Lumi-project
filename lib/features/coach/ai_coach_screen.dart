@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/responsive.dart';
 import '../../core/widgets/responsive_wrapper.dart';
 
 // Simple chat message model
@@ -82,6 +83,13 @@ class _AICoachScreenState extends State<AICoachScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDesktop = ResponsiveUtil.isDesktop(context);
+    final padding = ResponsiveUtil.getPadding(context);
+    final titleSize = ResponsiveUtil.getHeadline3FontSize(context);
+    final bodySize = ResponsiveUtil.getBodyFontSize(context);
+    final maxChatWidth = isDesktop ? 800.0 : 600.0;
+    final inputPadding =
+        EdgeInsets.symmetric(horizontal: padding * 0.5, vertical: 12);
 
     return Scaffold(
       appBar: AppBar(
@@ -95,12 +103,12 @@ class _AICoachScreenState extends State<AICoachScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('LUMI Coach',
-                    style: theme.textTheme.titleLarge
-                        ?.copyWith(fontWeight: FontWeight.bold)),
+                    style: theme.textTheme.titleLarge?.copyWith(
+                        fontSize: titleSize, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 2),
                 Text('Always here to listen',
                     style: theme.textTheme.bodySmall
-                        ?.copyWith(color: Colors.grey)),
+                        ?.copyWith(fontSize: bodySize - 4, color: Colors.grey)),
               ],
             ),
           ],
@@ -108,7 +116,7 @@ class _AICoachScreenState extends State<AICoachScreen> {
       ),
       body: ResponsiveWrapper(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 600),
+          constraints: BoxConstraints(maxWidth: maxChatWidth),
           child: Column(
             children: [
               Expanded(
@@ -116,8 +124,8 @@ class _AICoachScreenState extends State<AICoachScreen> {
                   color: theme.colorScheme.surface,
                   child: ListView.builder(
                     controller: _scroll,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 16),
+                    padding: EdgeInsets.symmetric(
+                        horizontal: padding * 0.4, vertical: 16),
                     itemCount: _messages.length + (_isTyping ? 1 : 0),
                     itemBuilder: (context, index) {
                       if (index >= _messages.length) {
@@ -131,7 +139,8 @@ class _AICoachScreenState extends State<AICoachScreen> {
                             decoration: BoxDecoration(
                                 color: AppColors.surface,
                                 borderRadius: BorderRadius.circular(12)),
-                            child: const Text('LUMI is typing...'),
+                            child: Text('LUMI is typing...',
+                                style: TextStyle(fontSize: bodySize - 2)),
                           ),
                         );
                       }
@@ -157,15 +166,16 @@ class _AICoachScreenState extends State<AICoachScreen> {
                       return Align(
                         alignment: align,
                         child: Container(
-                          constraints: const BoxConstraints(maxWidth: 460),
+                          constraints:
+                              BoxConstraints(maxWidth: maxChatWidth * 0.75),
                           margin: const EdgeInsets.symmetric(vertical: 6),
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 10),
                           decoration:
                               BoxDecoration(color: bg, borderRadius: radius),
                           child: Text(msg.text,
-                              style: theme.textTheme.bodyMedium
-                                  ?.copyWith(color: txtColor)),
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontSize: bodySize, color: txtColor)),
                         ),
                       );
                     },
@@ -175,8 +185,7 @@ class _AICoachScreenState extends State<AICoachScreen> {
 
               // input area
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: inputPadding,
                 decoration: BoxDecoration(color: AppColors.surface, boxShadow: [
                   BoxShadow(
                       color: const Color(0x10000000),
@@ -188,9 +197,11 @@ class _AICoachScreenState extends State<AICoachScreen> {
                     Expanded(
                       child: TextField(
                         controller: _ctrl,
-                        decoration: const InputDecoration.collapsed(
-                            hintText: 'Type a message...'),
+                        decoration: InputDecoration.collapsed(
+                            hintText: 'Type a message...',
+                            hintStyle: TextStyle(fontSize: bodySize)),
                         onSubmitted: (_) => _send(),
+                        style: TextStyle(fontSize: bodySize),
                       ),
                     ),
                     IconButton(

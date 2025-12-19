@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/services/auth_service.dart';
+import '../../core/utils/responsive.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
@@ -94,6 +95,65 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
     });
   }
 
+  Future<void> _signInWithGoogle() async {
+    try {
+      // Debug: ensure the button press leads to the sign-in call
+      // ignore: avoid_print
+      print('AuthScreen: sign in with Google button pressed');
+      await AuthService.signInWithGoogle();
+      if (!mounted) return;
+      // Успешная аутентификация — переходим на главный экран
+      context.go('/app');
+    } catch (e) {
+      if (!mounted) return;
+
+      String errorMessage = 'Google Sign-In Error';
+
+      // Log full exception to console for easier debugging
+      // ignore: avoid_print
+      print('AuthScreen._signInWithGoogle caught: $e');
+
+      // Определяем типо ошибки для лучшего сообщения
+      if (e.toString().contains('invalid-api-key')) {
+        errorMessage = 'Firebase не настроен. Заполните firebase_options.dart';
+      } else if (e.toString().contains('not-configured')) {
+        errorMessage = 'Google Sign-In не настроен на этой платформе';
+      } else if (e.toString().contains('cancelled')) {
+        errorMessage = 'Вход через Google отменён';
+      } else {
+        errorMessage = 'Ошибка: ${e.toString().split(':').first}';
+      }
+
+      // Показываем ошибку
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            backgroundColor: Colors.red.shade700,
+            duration: const Duration(seconds: 4),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  errorMessage,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                // Показываем сокращённый текст в UI, а полный в консоли
+                Text(
+                  e.toString(),
+                  style: const TextStyle(fontSize: 12),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ));
+        }
+      });
+    }
+  }
+
   @override
   void dispose() {
     _animController.dispose();
@@ -104,6 +164,13 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = ResponsiveUtil.isDesktop(context);
+    final padding = ResponsiveUtil.getPadding(context);
+    final headingSize = ResponsiveUtil.getHeadline2FontSize(context);
+    final subtitleSize = ResponsiveUtil.getBodyFontSize(context);
+    final maxWidth = isDesktop ? 500.0 : 400.0;
+    final containerPadding = isDesktop ? 40.0 : 24.0;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
@@ -161,16 +228,16 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
                     minHeight: MediaQuery.of(context).size.height),
                 child: Center(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 40, horizontal: 24),
+                    padding: EdgeInsets.symmetric(
+                        vertical: padding, horizontal: padding * 0.6),
                     child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 380),
+                      constraints: BoxConstraints(maxWidth: maxWidth),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(20),
                         child: BackdropFilter(
                           filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                           child: Container(
-                            padding: const EdgeInsets.all(40),
+                            padding: EdgeInsets.all(containerPadding),
                             decoration: BoxDecoration(
                               color: Colors.white.withValues(alpha: 0.45),
                               borderRadius: BorderRadius.circular(20),
@@ -208,7 +275,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
                                   const SizedBox(height: 16),
                                   Text('LUMI',
                                       style: GoogleFonts.outfit(
-                                          fontSize: 24,
+                                          fontSize: isDesktop ? 28 : 24,
                                           fontWeight: FontWeight.bold,
                                           color: const Color(0xFF0F172A))),
                                   const SizedBox(height: 8),
@@ -217,7 +284,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
                                           ? 'Welcome Back'
                                           : 'Create Account',
                                       style: GoogleFonts.outfit(
-                                          fontSize: 28,
+                                          fontSize: headingSize,
                                           fontWeight: FontWeight.bold,
                                           color: const Color(0xFF0F172A))),
                                   const SizedBox(height: 8),
@@ -227,24 +294,27 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
                                           : 'Join us to get started with LUMI.',
                                       textAlign: TextAlign.center,
                                       style: GoogleFonts.inter(
-                                          fontSize: 14,
+                                          fontSize: subtitleSize,
                                           color: const Color(0xFF64748B))),
-                                  const SizedBox(height: 32),
+                                  SizedBox(height: isDesktop ? 40 : 32),
                                   _ModernTextField(
                                       controller: _emailController,
                                       label: 'Email Address',
                                       hint: 'example@email.com',
                                       icon: Icons.mail_outline,
+                                      isDesktop: isDesktop,
                                       validator: (value) {
                                         final v = value?.trim() ?? '';
-                                        if (v.isEmpty)
+                                        if (v.isEmpty) {
                                           return 'Email is required';
+                                        }
                                         if (!RegExp(r"^[\w\.-]+@[\w\.-]+\.\w+")
-                                            .hasMatch(v))
+                                            .hasMatch(v)) {
                                           return 'Enter a valid email';
+                                        }
                                         return null;
                                       }),
-                                  const SizedBox(height: 20),
+                                  SizedBox(height: isDesktop ? 24 : 20),
                                   _ModernTextField(
                                       controller: _passwordController,
                                       label: 'Password',
@@ -252,19 +322,22 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
                                       icon: Icons.lock_outline,
                                       isPassword: true,
                                       obscureText: _obscure,
+                                      isDesktop: isDesktop,
                                       onToggleVisibility: () =>
                                           setState(() => _obscure = !_obscure),
                                       validator: (value) {
                                         final v = value ?? '';
-                                        if (v.isEmpty)
+                                        if (v.isEmpty) {
                                           return 'Password is required';
+                                        }
                                         if (!RegExp(r'^[a-zA-Z0-9]{6,}$')
-                                            .hasMatch(v))
+                                            .hasMatch(v)) {
                                           return 'Min 6 chars, Latin letters & numbers only';
+                                        }
                                         return null;
                                       }),
                                   if (isLoginMode) ...[
-                                    const SizedBox(height: 16),
+                                    SizedBox(height: isDesktop ? 20 : 16),
                                     Row(
                                         mainAxisAlignment:
                                             MainAxisAlignment.spaceBetween,
@@ -285,7 +358,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
                                             const SizedBox(width: 8),
                                             Text('Remember me',
                                                 style: GoogleFonts.inter(
-                                                    fontSize: 13,
+                                                    fontSize: subtitleSize - 2,
                                                     color: const Color(
                                                         0xFF475569))),
                                           ]),
@@ -293,25 +366,25 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
                                               onPressed: () {},
                                               child: Text('Forgot password?',
                                                   style: GoogleFonts.inter(
-                                                      fontSize: 13,
+                                                      fontSize:
+                                                          subtitleSize - 2,
                                                       fontWeight:
                                                           FontWeight.w600,
                                                       color: const Color(
                                                           0xFFA855F7)))),
                                         ]),
                                   ],
-                                  const SizedBox(height: 24),
+                                  SizedBox(height: isDesktop ? 32 : 24),
                                   Container(
                                       width: double.infinity,
-                                      height: 50,
+                                      height: isDesktop ? 56 : 50,
                                       decoration: BoxDecoration(
                                           borderRadius:
                                               BorderRadius.circular(16),
-                                          gradient: const LinearGradient(
-                                              colors: [
-                                                Color(0xFFA855F7),
-                                                Color(0xFF3B82F6)
-                                              ]),
+                                          gradient: const LinearGradient(colors: [
+                                            Color(0xFFA855F7),
+                                            Color(0xFF3B82F6)
+                                          ]),
                                           boxShadow: [
                                             BoxShadow(
                                                 color: const Color(0xFFA855F7)
@@ -331,12 +404,14 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
                                                           ? 'Sign In'
                                                           : 'Create Account',
                                                       style: GoogleFonts.inter(
-                                                          fontSize: 16,
+                                                          fontSize: isDesktop
+                                                              ? 18
+                                                              : 16,
                                                           fontWeight:
                                                               FontWeight.w600,
-                                                          color: Colors
-                                                              .white)))))),
-                                  const SizedBox(height: 24),
+                                                          color:
+                                                              Colors.white)))))),
+                                  SizedBox(height: isDesktop ? 32 : 24),
                                   Row(children: [
                                     Expanded(
                                         child:
@@ -347,13 +422,13 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
                                         child: Text('or',
                                             style: TextStyle(
                                                 color: Colors.grey[400],
-                                                fontSize: 13))),
+                                                fontSize: subtitleSize - 2))),
                                     Expanded(
                                         child: Divider(color: Colors.grey[200]))
                                   ]),
-                                  const SizedBox(height: 24),
+                                  SizedBox(height: isDesktop ? 32 : 24),
                                   OutlinedButton(
-                                      onPressed: () {},
+                                      onPressed: _signInWithGoogle,
                                       style: OutlinedButton.styleFrom(
                                           foregroundColor: Colors.black,
                                           side: BorderSide(
@@ -361,8 +436,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
                                           shape: RoundedRectangleBorder(
                                               borderRadius:
                                                   BorderRadius.circular(16)),
-                                          padding: const EdgeInsets.symmetric(
-                                              vertical: 14)),
+                                          padding: EdgeInsets.symmetric(
+                                              vertical: isDesktop ? 16 : 14)),
                                       child: Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
@@ -373,10 +448,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
                                             Text(
                                                 'Sign ${isLoginMode ? "in" : "up"} with Google',
                                                 style: GoogleFonts.inter(
+                                                    fontSize: subtitleSize,
                                                     fontWeight:
                                                         FontWeight.w500))
                                           ])),
-                                  const SizedBox(height: 24),
+                                  SizedBox(height: isDesktop ? 32 : 24),
                                   Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
@@ -386,6 +462,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
                                                 ? "Don't have an account? "
                                                 : "Already have an account? ",
                                             style: GoogleFonts.inter(
+                                                fontSize: subtitleSize - 1,
                                                 color:
                                                     const Color(0xFF64748B))),
                                         GestureDetector(
@@ -396,6 +473,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
                                                     ? "Sign Up"
                                                     : "Sign In",
                                                 style: GoogleFonts.inter(
+                                                    fontSize: subtitleSize - 1,
                                                     color:
                                                         const Color(0xFFA855F7),
                                                     fontWeight:
@@ -422,7 +500,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
 class _ModernTextField extends StatelessWidget {
   final String label, hint;
   final IconData icon;
-  final bool isPassword, obscureText;
+  final bool isPassword, obscureText, isDesktop;
   final VoidCallback? onToggleVisibility;
   final TextEditingController controller;
   final String? Function(String?) validator;
@@ -433,6 +511,7 @@ class _ModernTextField extends StatelessWidget {
     required this.icon,
     required this.controller,
     required this.validator,
+    required this.isDesktop,
     this.isPassword = false,
     this.obscureText = false,
     this.onToggleVisibility,
@@ -440,12 +519,15 @@ class _ModernTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final labelSize = ResponsiveUtil.getSmallFontSize(context);
+    final inputSize = ResponsiveUtil.getBodyFontSize(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
             style: GoogleFonts.inter(
-                fontSize: 14,
+                fontSize: labelSize,
                 fontWeight: FontWeight.w500,
                 color: const Color(0xFF334155))),
         const SizedBox(height: 8),
@@ -467,7 +549,8 @@ class _ModernTextField extends StatelessWidget {
                 : null,
             filled: true,
             fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(vertical: 16),
+            contentPadding: EdgeInsets.symmetric(
+                vertical: isDesktop ? 20 : 16, horizontal: 16),
             enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
                 borderSide: BorderSide(color: Colors.grey[200]!)),
@@ -482,6 +565,7 @@ class _ModernTextField extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
                 borderSide: BorderSide(color: Colors.red[300]!, width: 1.5)),
           ),
+          style: GoogleFonts.inter(fontSize: inputSize),
         ),
       ],
     );

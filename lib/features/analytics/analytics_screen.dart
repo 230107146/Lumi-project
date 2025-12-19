@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/responsive.dart';
 import '../../core/widgets/responsive_wrapper.dart';
 
 class AnalyticsScreen extends StatelessWidget {
@@ -12,23 +13,27 @@ class AnalyticsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDesktop = ResponsiveUtil.isDesktop(context);
+    final padding = ResponsiveUtil.getPadding(context);
+    final titleSize = ResponsiveUtil.getHeadline3FontSize(context);
+    final chartHeight = isDesktop ? 400.0 : 360.0;
 
     return ResponsiveWrapper(
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Analytics'),
+          title: Text('Analytics', style: TextStyle(fontSize: titleSize)),
           leading: BackButton(onPressed: () => Navigator.of(context).pop()),
           backgroundColor: theme.scaffoldBackgroundColor,
           elevation: 0,
         ),
         body: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.all(padding * 0.6),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Chart Card
               Container(
-                height: 360,
+                height: chartHeight,
                 decoration: BoxDecoration(
                   color: AppColors.surface,
                   borderRadius: BorderRadius.circular(16),
@@ -40,15 +45,15 @@ class AnalyticsScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                padding: EdgeInsets.symmetric(
+                    horizontal: padding * 0.4, vertical: 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Weekly Activity',
-                        style: theme.textTheme.titleLarge
-                            ?.copyWith(fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 12),
+                        style: theme.textTheme.titleLarge?.copyWith(
+                            fontSize: titleSize, fontWeight: FontWeight.bold)),
+                    SizedBox(height: isDesktop ? 16 : 12),
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.only(right: 12.0, left: 4.0),
@@ -85,12 +90,12 @@ class AnalyticsScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: isDesktop ? 32 : 20),
 
               // Stats grid
               Wrap(
-                spacing: 12,
-                runSpacing: 12,
+                spacing: isDesktop ? 16 : 12,
+                runSpacing: isDesktop ? 16 : 12,
                 children: const [
                   _StatCard(
                     icon: Icons.check_circle_outline,
@@ -213,10 +218,15 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDesktop = ResponsiveUtil.isDesktop(context);
+    final bodySize = ResponsiveUtil.getBodyFontSize(context);
+    final cardWidth = isDesktop ? 200.0 : 160.0;
+    final cardPadding = isDesktop ? 18.0 : 14.0;
+
     return SizedBox(
-      width: 160,
+      width: cardWidth,
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: EdgeInsets.all(cardPadding),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(12),
@@ -231,18 +241,18 @@ class _StatCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             CircleAvatar(
-              radius: 20,
+              radius: isDesktop ? 24 : 20,
               backgroundColor: AppColors.primary.withAlpha(25),
               child: Icon(icon, color: AppColors.primary),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: isDesktop ? 16 : 12),
             Text(title,
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(color: Colors.grey.shade600)),
-            const SizedBox(height: 8),
+                style: theme.textTheme.bodySmall?.copyWith(
+                    fontSize: bodySize - 3, color: Colors.grey.shade600)),
+            SizedBox(height: isDesktop ? 12 : 8),
             Text(value,
-                style: theme.textTheme.titleMedium
-                    ?.copyWith(fontWeight: FontWeight.bold)),
+                style: theme.textTheme.titleMedium?.copyWith(
+                    fontSize: bodySize + 2, fontWeight: FontWeight.bold)),
           ],
         ),
       ),

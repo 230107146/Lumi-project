@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
-import '../../core/theme/app_theme.dart';
-import '../../core/services/auth_service.dart';
-import '../home/models/habit_model.dart';
-import '../../core/widgets/responsive_wrapper.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lumi/core/widgets/shared_header.dart';
-import 'package:lumi/core/widgets/shared_footer.dart';
+import 'package:lumi/core/services/auth_service.dart';
+import 'package:lumi/core/utils/responsive.dart';
+import '../home/models/habit_model.dart';
 
 class TrackingScreen extends StatefulWidget {
   final Habit habit;
@@ -20,17 +16,13 @@ class TrackingScreen extends StatefulWidget {
 
 class _TrackingScreenState extends State<TrackingScreen> {
   late int _counter;
-  late double _hours;
-  final TextEditingController _noteController = TextEditingController();
-
-  static const double _kHeaderHeight = 76.0;
+  late TextEditingController _noteController;
 
   @override
   void initState() {
     super.initState();
     _counter = widget.habit.currentProgress;
-    _hours = 0.0;
-    // Remember this route as last visited when user opens a tracker
+    _noteController = TextEditingController();
     AuthService.saveLastRoute('/track');
   }
 
@@ -42,314 +34,623 @@ class _TrackingScreenState extends State<TrackingScreen> {
 
   void _saveProgress() async {
     await showDialog<void>(
-        context: context,
-        builder: (dialogContext) {
-          return Dialog(
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.check_circle, size: 64, color: AppColors.primary),
-                  const SizedBox(height: 12),
-                  Text('Progress Saved!',
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleLarge
-                          ?.copyWith(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  Text('One step closer to your goal!',
-                      style: Theme.of(context).textTheme.bodyMedium),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(dialogContext).pop();
-                        // navigate back to home/root
-                        context.go('/');
-                      },
-                      child: const Text('Done'))
-                ],
-              ),
+      context: context,
+      builder: (dialogContext) {
+        return Dialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.check_circle,
+                    color: Color(0xFF6C63FF), size: 64),
+                const SizedBox(height: 20),
+                Text(
+                  'Progress Saved!',
+                  style: GoogleFonts.outfit(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF6C63FF),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Great work on "${widget.habit.title}"!',
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    color: Colors.black54,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(dialogContext);
+                    context.go('/app');
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFF6C63FF),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    minimumSize: const Size(double.infinity, 56),
+                  ),
+                  child: Text(
+                    'Continue',
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          );
-        });
+          ),
+        );
+      },
+    );
+  }
+
+  String _getHabitEmoji(String habitTitle) {
+    final title = habitTitle.toLowerCase();
+    if (title.contains('phone') || title.contains('social')) {
+      return '📱';
+    } else if (title.contains('smoke') || title.contains('smoking')) {
+      return '🚭';
+    } else if (title.contains('junk') || title.contains('food')) {
+      return '🍕';
+    } else if (title.contains('game') || title.contains('gaming')) {
+      return '🎮';
+    }
+    return '✨';
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final isDesktopLayout = ResponsiveUtil.isDesktop(context);
 
-    final screenHeight = MediaQuery.of(context).size.height;
+    return Scaffold(
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final maxWidth = constraints.maxWidth;
+          final isDesktop = maxWidth > 1000 && isDesktopLayout;
 
-    return ResponsiveWrapper(
-      child: Scaffold(
-        backgroundColor: theme.scaffoldBackgroundColor,
-        drawer: null,
-        body: Stack(
-          fit: StackFit.expand,
-          children: [
-            Positioned.fill(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: _kHeaderHeight),
-
-                    // HERO: full-bleed gradient background that fills remaining viewport
-                    Container(
-                      width: double.infinity,
-                      constraints: BoxConstraints(
-                          minHeight: screenHeight - _kHeaderHeight),
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Color(0xFF6C63FF), Color(0xFF8B85FF)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+          if (isDesktop) {
+            // DESKTOP: True split-screen (Notion/Linear style)
+            return Row(
+              children: [
+                // LEFT SIDE: White background with form/counter
+                Expanded(
+                  flex: 1,
+                  child: Container(
+                    color: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 80,
+                      vertical: 40,
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Back button (top-left)
+                        GestureDetector(
+                          onTap: () => context.go('/app'),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.arrow_back,
+                                size: 24,
+                                color: Color(0xFF6C63FF),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Back',
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFF6C63FF),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 48, horizontal: 16),
-                      child: Column(
-                        children: [
-                          Center(
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 1100),
+
+                        const Spacer(),
+
+                        // Center content: Title and counter
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Log Activity',
+                              style: GoogleFonts.outfit(
+                                fontSize: 48,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.black,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              widget.habit.title,
+                              style: GoogleFonts.inter(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w400,
+                                color: Colors.black54,
+                              ),
+                            ),
+                            const SizedBox(height: 48),
+
+                            // Counter display
+                            Center(
                               child: Column(
-                                mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text(widget.habit.title,
-                                      style: GoogleFonts.outfit(
-                                          fontSize: 40,
-                                          fontWeight: FontWeight.w800,
-                                          color: Colors.white)),
-                                  const SizedBox(height: 12),
-                                  Text('How did it go today?',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .headlineSmall
-                                          ?.copyWith(
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.white)),
-                                  const SizedBox(height: 24),
-
-                                  // Interaction controls (counter / timer)
-                                  if (widget.habit.type ==
-                                      AddictionType.counter) ...[
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        CircleAvatar(
-                                          radius: 26,
-                                          backgroundColor: Colors.white24,
-                                          child: IconButton(
-                                            onPressed: () {
-                                              setState(() {
-                                                if (_counter > 0) _counter--;
-                                              });
-                                            },
-                                            icon: const Icon(Icons.remove,
-                                                color: Colors.white),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 20),
-                                        Text('$_counter',
-                                            style: const TextStyle(
-                                                fontSize: 56,
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.white)),
-                                        const SizedBox(width: 20),
-                                        CircleAvatar(
-                                          radius: 26,
-                                          backgroundColor: Colors.white,
-                                          child: IconButton(
-                                            onPressed: () {
-                                              setState(() {
-                                                _counter++;
-                                              });
-                                            },
-                                            icon: Icon(Icons.add,
-                                                color: AppColors.primary),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ] else ...[
-                                    Column(
-                                      children: [
-                                        Text(
-                                            _hours % 1 == 0
-                                                ? '${_hours.toInt()} hours'
-                                                : '${_hours.toStringAsFixed(1)} hours',
-                                            style: const TextStyle(
-                                                fontSize: 40,
-                                                fontWeight: FontWeight.w600,
-                                                color: Colors.white)),
-                                        const SizedBox(height: 12),
-                                        Slider(
-                                          min: 0,
-                                          max: 12,
-                                          divisions: 24,
-                                          value: _hours,
-                                          activeColor: Colors.white,
-                                          inactiveColor: Colors.white38,
-                                          label: _hours % 1 == 0
-                                              ? '${_hours.toInt()} h'
-                                              : '${_hours.toStringAsFixed(1)} h',
-                                          onChanged: (v) =>
-                                              setState(() => _hours = v),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-
-                                  const SizedBox(height: 24),
-                                  ConstrainedBox(
-                                    constraints:
-                                        const BoxConstraints(maxWidth: 760),
-                                    child: TextField(
-                                      controller: _noteController,
-                                      maxLines: 4,
-                                      style:
-                                          const TextStyle(color: Colors.white),
-                                      decoration: InputDecoration(
-                                        filled: true,
-                                        fillColor: Colors.white24,
-                                        border: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12)),
-                                        labelText: 'Note',
-                                        labelStyle: const TextStyle(
-                                            color: Colors.white70),
-                                        hintText: 'How do you feel?',
-                                      ),
+                                  // Large number
+                                  Text(
+                                    '$_counter',
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 140,
+                                      fontWeight: FontWeight.w900,
+                                      color: Color(0xFF6C63FF),
+                                      height: 1.0,
                                     ),
                                   ),
-                                  const SizedBox(height: 28),
+                                  const SizedBox(height: 24),
+
+                                  // Increment/Decrement buttons
                                   Row(
-                                    mainAxisSize: MainAxisSize.min,
+                                    mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      ElevatedButton(
-                                        onPressed: _saveProgress,
-                                        style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.white,
-                                            shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(14))),
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 18.0, vertical: 14.0),
-                                          child: Text('Save Progress',
-                                              style: TextStyle(
-                                                  fontSize: 16,
-                                                  color: AppColors.primary)),
+                                      GestureDetector(
+                                        onTap: () {
+                                          setState(() {
+                                            if (_counter > 0) {
+                                              _counter--;
+                                            }
+                                          });
+                                        },
+                                        child: Container(
+                                          width: 56,
+                                          height: 56,
+                                          decoration: BoxDecoration(
+                                            color: Colors.grey[100],
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                          child: const Center(
+                                            child: Icon(
+                                              Icons.remove,
+                                              size: 24,
+                                              color: Color(0xFF6C63FF),
+                                            ),
+                                          ),
                                         ),
                                       ),
-                                      const SizedBox(width: 12),
-                                      OutlinedButton(
-                                          onPressed: () => context.go('/app'),
-                                          style: OutlinedButton.styleFrom(
-                                              side: BorderSide(
-                                                  color: Colors.white24)),
-                                          child: const Text('Back to Home',
-                                              style: TextStyle(
-                                                  color: Colors.white)))
+                                      const SizedBox(width: 20),
+                                      GestureDetector(
+                                        onTap: () {
+                                          setState(() => _counter++);
+                                        },
+                                        child: Container(
+                                          width: 56,
+                                          height: 56,
+                                          decoration: BoxDecoration(
+                                            color: Color(0xFF6C63FF),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                          child: const Center(
+                                            child: Icon(
+                                              Icons.add,
+                                              size: 24,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
                                     ],
-                                  )
+                                  ),
                                 ],
                               ),
                             ),
-                          ),
 
-                          const SizedBox(height: 36),
+                            const SizedBox(height: 48),
 
-                          // Full-width statistic band that stretches the full screen
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 0),
-                            child: Container(
-                              width: double.infinity,
-                              height: 140,
-                              color: Colors.white24,
-                              child: Center(
-                                child: ConstrainedBox(
-                                  constraints:
-                                      const BoxConstraints(maxWidth: 1100),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text('Daily Goals',
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .headlineSmall
-                                                    ?.copyWith(
-                                                        color: Colors.white,
-                                                        fontWeight:
-                                                            FontWeight.bold)),
-                                            const SizedBox(height: 6),
-                                            Text(
-                                                'You are doing great! Keep it up.',
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .bodyMedium
-                                                    ?.copyWith(
-                                                        color: Colors.white70)),
-                                          ],
-                                        ),
-                                      ),
-                                      SizedBox(
-                                        width: 120,
-                                        child: Center(
-                                          child: Stack(
-                                            alignment: Alignment.center,
-                                            children: [
-                                              CircularProgressIndicator(
-                                                  value: 0.44,
-                                                  color: Colors.white70,
-                                                  backgroundColor:
-                                                      Colors.white24),
-                                              const Text('44%',
-                                                  style: TextStyle(
-                                                      color: Colors.white,
-                                                      fontWeight:
-                                                          FontWeight.bold))
-                                            ],
-                                          ),
-                                        ),
-                                      )
-                                    ],
+                            // Note field
+                            TextField(
+                              controller: _noteController,
+                              maxLines: 3,
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                color: Colors.black87,
+                              ),
+                              decoration: InputDecoration(
+                                filled: true,
+                                fillColor: Colors.grey[50],
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey[300]!,
                                   ),
                                 ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFF6C63FF),
+                                    width: 2,
+                                  ),
+                                ),
+                                labelText: 'Notes (optional)',
+                                labelStyle: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  color: Colors.black38,
+                                ),
+                                hintText: 'How did you feel?',
+                                hintStyle: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  color: Colors.black26,
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 14,
+                                ),
                               ),
+                            ),
+                          ],
+                        ),
+
+                        const Spacer(),
+
+                        // Save button (bottom-left)
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _saveProgress,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Color(0xFF6C63FF),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 16,
+                              ),
+                            ),
+                            child: Text(
+                              'Save Progress',
+                              style: GoogleFonts.inter(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // RIGHT SIDE: Purple gradient with large emoji/visual
+                Expanded(
+                  flex: 1,
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Color(0xFF6C63FF),
+                          Color(0xFF2563EB),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          // Large emoji icon
+                          Text(
+                            _getHabitEmoji(widget.habit.title),
+                            style: const TextStyle(fontSize: 300),
+                          ),
+                          const SizedBox(height: 40),
+
+                          // Motivational text
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 40),
+                            child: Text(
+                              'You\'re building better habits',
+                              style: GoogleFonts.outfit(
+                                fontSize: 36,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                                height: 1.3,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 40),
+                            child: Text(
+                              'Every action counts. Keep going!',
+                              style: GoogleFonts.inter(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w400,
+                                color: Colors.white70,
+                                height: 1.5,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
                           ),
                         ],
                       ),
                     ),
-
-                    // Shared footer
-                    const SharedFooter(),
-
-                    // Bottom spacer so floating UI doesn't block content
-                    const SizedBox(height: 100),
-                  ],
+                  ),
                 ),
-              ),
-            ),
+              ],
+            );
+          } else {
+            // MOBILE: Stacked single-column layout
+            return SingleChildScrollView(
+              child: Column(
+                children: [
+                  // White form section
+                  Container(
+                    color: Colors.white,
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 32,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Back button
+                        GestureDetector(
+                          onTap: () => context.go('/app'),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.arrow_back,
+                                size: 20,
+                                color: Color(0xFF6C63FF),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Back',
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFF6C63FF),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 32),
 
-            // Fixed header (shared)
-            const Positioned(
-                top: 0, left: 0, right: 0, child: SharedAppHeader()),
-          ],
-        ),
+                        // Title
+                        Text(
+                          'Log Activity',
+                          style: GoogleFonts.outfit(
+                            fontSize: 36,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.black,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          widget.habit.title,
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.black54,
+                          ),
+                        ),
+                        const SizedBox(height: 40),
+
+                        // Counter display
+                        Center(
+                          child: Column(
+                            children: [
+                              Text(
+                                '$_counter',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 100,
+                                  fontWeight: FontWeight.w900,
+                                  color: Color(0xFF6C63FF),
+                                  height: 1.0,
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        if (_counter > 0) {
+                                          _counter--;
+                                        }
+                                      });
+                                    },
+                                    child: Container(
+                                      width: 48,
+                                      height: 48,
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[100],
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: const Center(
+                                        child: Icon(
+                                          Icons.remove,
+                                          size: 20,
+                                          color: Color(0xFF6C63FF),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  GestureDetector(
+                                    onTap: () {
+                                      setState(() => _counter++);
+                                    },
+                                    child: Container(
+                                      width: 48,
+                                      height: 48,
+                                      decoration: BoxDecoration(
+                                        color: Color(0xFF6C63FF),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: const Center(
+                                        child: Icon(
+                                          Icons.add,
+                                          size: 20,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 40),
+
+                        // Note field
+                        TextField(
+                          controller: _noteController,
+                          maxLines: 3,
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            color: Colors.black87,
+                          ),
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.grey[50],
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(
+                                color: Colors.grey[300]!,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(
+                                color: Color(0xFF6C63FF),
+                                width: 2,
+                              ),
+                            ),
+                            labelText: 'Notes (optional)',
+                            labelStyle: GoogleFonts.inter(
+                              fontSize: 14,
+                              color: Colors.black38,
+                            ),
+                            hintText: 'How did you feel?',
+                            hintStyle: GoogleFonts.inter(
+                              fontSize: 14,
+                              color: Colors.black26,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 14,
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // Save button
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _saveProgress,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Color(0xFF6C63FF),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 14,
+                              ),
+                            ),
+                            child: Text(
+                              'Save Progress',
+                              style: GoogleFonts.inter(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Purple gradient visual section
+                  Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Color(0xFF6C63FF),
+                          Color(0xFF2563EB),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 60,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Emoji
+                        Text(
+                          _getHabitEmoji(widget.habit.title),
+                          style: const TextStyle(fontSize: 120),
+                        ),
+                        const SizedBox(height: 32),
+
+                        // Motivational text
+                        Text(
+                          'You\'re building better habits',
+                          style: GoogleFonts.outfit(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                            height: 1.3,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Every action counts. Keep going!',
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.white70,
+                            height: 1.5,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+        },
       ),
     );
   }

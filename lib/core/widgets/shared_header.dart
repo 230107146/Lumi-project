@@ -26,7 +26,7 @@ class _SharedAppHeaderState extends State<SharedAppHeader> {
   }
 
   Future<void> _load() async {
-    final v = await AuthService.isLoggedIn();
+    final v = AuthService.isLoggedIn();
     if (!mounted) return;
     setState(() => _loggedIn = v);
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/responsive.dart';
 import '../../core/widgets/responsive_wrapper.dart';
 import 'onboarding_model.dart';
 
@@ -63,12 +64,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDesktop = ResponsiveUtil.isDesktop(context);
+    final padding = ResponsiveUtil.getPadding(context);
+    final iconSize = ResponsiveUtil.getLargeIconSize(context);
+    final titleSize = ResponsiveUtil.getHeadline3FontSize(context);
+    final subtitleSize = ResponsiveUtil.getBodyFontSize(context);
+    final buttonHeight = isDesktop ? 56.0 : 50.0;
+
     return ResponsiveWrapper(
       child: Scaffold(
         backgroundColor: theme.colorScheme.surface,
         body: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            padding: EdgeInsets.symmetric(horizontal: padding * 0.6),
             child: Column(
               children: [
                 Expanded(
@@ -81,39 +89,44 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           CircleAvatar(
-                            radius: 70,
+                            radius: iconSize / 2,
                             backgroundColor: AppColors.primary.withAlpha(31),
                             child: Icon(
                               slide.icon,
-                              size: 100,
+                              size: iconSize,
                               color: AppColors.primary,
                             ),
                           ),
-                          const SizedBox(height: 28),
+                          SizedBox(height: isDesktop ? 40 : 28),
                           Text(
                             slide.title,
-                            style: theme.textTheme.headlineSmall
-                                ?.copyWith(fontWeight: FontWeight.w700),
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                                fontSize: titleSize,
+                                fontWeight: FontWeight.w700),
                             textAlign: TextAlign.center,
                           ),
-                          const SizedBox(height: 12),
-                          Text(
-                            slide.subtitle,
-                            style: theme.textTheme.bodyMedium
-                                ?.copyWith(color: Colors.grey.shade600),
-                            textAlign: TextAlign.center,
+                          SizedBox(height: isDesktop ? 16 : 12),
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: padding),
+                            child: Text(
+                              slide.subtitle,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontSize: subtitleSize,
+                                  color: Colors.grey.shade600),
+                              textAlign: TextAlign.center,
+                            ),
                           ),
                         ],
                       );
                     },
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: isDesktop ? 24 : 16),
                 _buildDots(),
-                const SizedBox(height: 20),
+                SizedBox(height: isDesktop ? 32 : 20),
                 SizedBox(
                   width: double.infinity,
-                  height: 56,
+                  height: buttonHeight,
                   child: ElevatedButton(
                     onPressed: _onNext,
                     style: ElevatedButton.styleFrom(
@@ -125,12 +138,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       _current < onboardingSlides.length - 1
                           ? 'Next'
                           : 'Get Started',
-                      style: theme.textTheme.labelLarge
-                          ?.copyWith(color: Colors.white),
+                      style: theme.textTheme.labelLarge?.copyWith(
+                          fontSize: subtitleSize,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600),
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: isDesktop ? 40 : 24),
               ],
             ),
           ),
