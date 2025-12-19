@@ -1,64 +1,91 @@
-# User Stories
+# 5. User_Stories.md
 
-## Story 1: User Registration
-As a user, I want to create an account, so I can access my personal dashboard.
+This document defines the core user stories for the LUMI MVP.
+Each user story follows the standard format:
 
-Acceptance Criteria:
-- The system accepts a unique email address
-- The password meets defined security requirements
-- The user is redirected to the dashboard after successful registration
+As a [role], I want to [action], so I can [result].
 
----
-
-## Story 2: User Authentication
-As a user, I want to log in to my account, so I can securely access my data.
-
-Acceptance Criteria:
-- The system authenticates users with valid credentials
-- Invalid credentials are rejected with an error message
-- The user remains logged in until logout
+All stories:
+- focus on one clear user goal
+- include measurable and testable acceptance criteria
+- are based on real survey respondents
+- cover the full MVP scope
 
 ---
 
-## Story 3: Addiction Selection
-As a user, I want to select an addiction to track, so I can focus on a specific behavior.
+## User Story 1 — Progress Tracking
 
-Acceptance Criteria:
-- The system allows selection from predefined addiction types
-- The selected addiction is saved to the user profile
-- The user can change the selected addiction later
+**Story**  
+As Sherekhan Marzhan, a student who struggles with social media and junk food addiction,  
+I want to track my daily behavior and view my progress over time,  
+so I can stay motivated and improve my focus and productivity even if I relapse.
 
----
-
-## Story 4: Addiction Tracking
-As a user, I want to log my addictive behavior, so I can monitor my progress over time.
-
-Acceptance Criteria:
-- The user can create a new tracking entry
-- Each entry includes a date and value
-- The entry is stored successfully in the system
+**Acceptance Criteria**
+- User can log daily usage for selected addictions
+- System displays weekly and monthly progress charts
+- Relapses are marked without deleting past data
+- User can view total time spent and usage frequency
 
 ---
 
-## Story 5: Progress Visualization
-As a user, I want to view my progress statistics, so I can understand behavior trends.
+## User Story 2 — Rewards & Streaks
 
-Acceptance Criteria:
-- The system displays historical tracking data
-- Data is presented in a clear and readable format
-- Progress information is updated when new data is added
+**Story**  
+As Aisulu, a student who often relapses due to boredom,  
+I want to earn streaks and rewards for consistent behavior change,  
+so I can stay motivated to reduce my addictive habits.
+
+**Acceptance Criteria**
+- System tracks consecutive successful days automatically
+- Streak resets only after a logged relapse
+- User receives visual rewards or badges
+- Milestone progress (3, 7, 14 days) is displayed
+
+---
+
+## User Story 3 — Time Limits
+
+**Story**  
+As Marina, a student who uses social media very often and feels stressed,  
+I want to set daily time limits for my addictive behaviors,  
+so I can protect my sleep and reduce automatic overuse.
+
+**Acceptance Criteria**
+- User can set a daily time limit per addiction
+- System sends a warning before the limit is reached
+- System records when the limit is exceeded
+- User can modify or disable time limits
 
 ---
 
-## Story 6: Reminders and Notifications
-As a user, I want to receive reminders, so I do not forget to log my behavior.
+## User Story 4 — Reminders
 
-Acceptance Criteria:
-- The user can enable or disable reminders
-- Notifications are delivered according to user settings
-- Reminder settings can be updated by the user
+**Story**  
+As Bagdel Aizhan, a student who uses social media when bored,  
+I want to receive reminders during risky times,  
+so I can stop myself before falling into the habit automatically.
+
+**Acceptance Criteria**
+- User can enable or disable reminders
+- User can choose reminder times
+- System sends notifications at scheduled times
+- Reminder messages are short and supportive
 
 ---
+
+## User Story 5 — Emergency Support During Urges
+
+**Story**  
+As Ibrahim Juma Haji, a student who struggles with boredom and academic performance,  
+I want instant emergency support during strong urges,  
+so I can cope with the urge instead of relapsing.
+
+**Acceptance Criteria**
+- User can access emergency support with one tap
+- System provides immediate calming or grounding guidance
+- Emergency support lasts less than 2 minutes
+- Emergency usage is logged for later review
+
 
 ## User Research Basis
 The user stories were derived from survey feedback collected from potential users.
